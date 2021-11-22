@@ -1,50 +1,67 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::time::Instant;
 
 fn main() {
-    // let pattern = std::env::args().nth(1).expect("no pattern given");
-    // let path = std::env::args().nth(2).expect("no path given");
+    let sub_command = std::env::args().nth(1).expect("No sub command given");
+    let sub_sub_command = std::env::args().nth(2).expect("No sub sub command given");
 
-    let data = r#"
-        {
-            "name": "Toyota Sienna",
-            "total_mileage": 1000,
-            "maintenance_items": {
-                "Oil Change": {
-                    "months_interval": 50,
-                    "miles_interval": 3,
-                    "name": "Oil Change",
-                    "description": "Synthetic 5w20",
-                    "last_performed_maintenance": {
-                        "miles_performed": 50,
-                        "date_performed": 0
-                    }
-                },
-                "Transmission Fluid Change": {
-                    "months_interval": 100,
-                    "miles_interval": 140,
-                    "name": "Transmission Fluid Change",
-                    "description": "Da Blue Stuff!",
-                    "last_performed_maintenance": {
-                        "miles_performed": 22,
-                        "date_performed": 0
-                    }
-                },
-                "Change all the bolts": {
-                    "months_interval": 900,
-                    "miles_interval": 140,
-                    "name": "Change all the bolts",
-                    "description": "Except spoiler bolts",
-                    "last_performed_maintenance": {
-                        "miles_performed": 999,
-                        "date_performed": 0
-                    }
-                }
+    match SubCommand::from_str(&sub_command) {
+        Ok(SubCommand::Vehicle) => {
+            match VehicleSubCommand::from_str(&sub_sub_command) {
+                Ok(VehicleSubCommand::Add) => { println!("Add vehicle"); }
+                Ok(VehicleSubCommand::Remove) => { println!("Remove vehicle"); }
+                Ok(VehicleSubCommand::List) => { println!("List vehicles"); }
+                Ok(VehicleSubCommand::Get) => { println!("Get vehicle"); }
+                Ok(VehicleSubCommand::Update) => { println!("Update vehicle"); }
+                Err(()) => { println!("Invalid vehicle subcommand \"{}\"", sub_sub_command)}
             }
-        }"#;
+        }
+        Err(()) => { println!("Invalid subcommand \"{}\"", sub_command)}
+    }
+    
+    
 
-    let mut sienna = serde_json::from_str(data);
+    // let data = r#"
+    //     {
+    //         "name": "Toyota Sienna",
+    //         "total_mileage": 1000,
+    //         "maintenance_items": {
+    //             "Oil Change": {
+    //                 "months_interval": 50,
+    //                 "miles_interval": 3,
+    //                 "name": "Oil Change",
+    //                 "description": "Synthetic 5w20",
+    //                 "last_performed_maintenance": {
+    //                     "miles_performed": 50,
+    //                     "date_performed": 0
+    //                 }
+    //             },
+    //             "Transmission Fluid Change": {
+    //                 "months_interval": 100,
+    //                 "miles_interval": 140,
+    //                 "name": "Transmission Fluid Change",
+    //                 "description": "Da Blue Stuff!",
+    //                 "last_performed_maintenance": {
+    //                     "miles_performed": 22,
+    //                     "date_performed": 0
+    //                 }
+    //             },
+    //             "Change all the bolts": {
+    //                 "months_interval": 900,
+    //                 "miles_interval": 140,
+    //                 "name": "Change all the bolts",
+    //                 "description": "Except spoiler bolts",
+    //                 "last_performed_maintenance": {
+    //                     "miles_performed": 999,
+    //                     "date_performed": 0
+    //                 }
+    //             }
+    //         }
+    //     }"#;
+
+    // let mut sienna = serde_json::from_str(data);
 
     // let mut sienna = Car {
     //     name: String::from("Toyota Sienna"),
@@ -78,8 +95,48 @@ fn main() {
     //     )
     // );
 
-    dbg!(&sienna);
-    determine_needed_maintenance(sienna.unwrap())
+    // dbg!(&sienna);
+    // determine_needed_maintenance(sienna.unwrap())
+}
+
+enum SubCommand {
+    Vehicle
+}
+
+impl FromStr for SubCommand {
+
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<SubCommand, Self::Err> {
+        match input {
+            "vehicle"  => Ok(SubCommand::Vehicle),
+            _      => Err(()),
+        }
+    }
+}
+
+enum VehicleSubCommand {
+    Add,
+    Remove,
+    List,
+    Get,
+    Update,
+}
+
+impl FromStr for VehicleSubCommand {
+
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<VehicleSubCommand, Self::Err> {
+        match input {
+            "add"  => Ok(VehicleSubCommand::Add),
+            "remove"  => Ok(VehicleSubCommand::Remove),
+            "list"  => Ok(VehicleSubCommand::List),
+            "get"  => Ok(VehicleSubCommand::Get),
+            "update"  => Ok(VehicleSubCommand::Update),
+            _      => Err(()),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
