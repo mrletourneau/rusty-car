@@ -1,62 +1,66 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::str::FromStr;
-use std::time::Instant;
 use std::process::exit;
+use std::str::FromStr;
 
 fn main() {
-    let sub_command = std::env::args().nth(1);
-
-    if sub_command.is_none() {
-        println!("No command passed, exiting...");
-        exit(1);
-    }
-
-    let sub_command = sub_command.unwrap();
-
-    let sub_command = match SubCommand::from_str(&sub_command) {
-        Ok(i) => { i }
-        Err(()) => { 
-            println!("Invalid subcommand \"{}\", exiting...", sub_command);
-            exit(1);
-        }
-    };
+    let sub_command = retrieve_argument(1, None);
+    let sub_command: SubCommand = convert_argument(&sub_command);
 
     match sub_command {
         SubCommand::Vehicle => {
-            let vehicle_command = std::env::args().nth(2);
-
-            if vehicle_command.is_none() {
-                println!("No command passed, exiting...");
-                exit(1);
-            }
-        
-            let vehicle_command = vehicle_command.unwrap();
-        
-            let vehicle_command = match VehicleSubCommand::from_str(&vehicle_command) {
-                Ok(i) => { i }
-                Err(()) => { 
-                    println!("Invalid subcommand \"{}\", exiting...", vehicle_command);
-                    exit(1);
-                }
-            };
+            let vehicle_command = retrieve_argument(
+                2,
+                Some(String::from("No vehicle sub command found, exiting...")),
+            );
+            let vehicle_command: VehicleSubCommand = convert_argument(&vehicle_command);
 
             match vehicle_command {
-                VehicleSubCommand::Add => { println!("Add vehicle"); }
-                VehicleSubCommand::Remove => { println!("Remove vehicle"); }
-                VehicleSubCommand::List => { println!("List vehicles"); }
+                VehicleSubCommand::Add => {
+                    println!("Add vehicle");
+                }
+                VehicleSubCommand::Remove => {
+                    println!("Remove vehicle");
+                }
+                VehicleSubCommand::List => {
+                    println!("List vehicles");
+                }
                 VehicleSubCommand::Get => {
-                    let vehicle_name = std::env::args().nth(3);
-
-                    if vehicle_name.is_none() {
-                        println!("No vehicle name specified, exiting...");
-                        exit(1);
-                    }
+                    let vehicle_name = retrieve_argument(
+                        3,
+                        Some(String::from("No vehicle name specified, exiting...")),
+                    );
 
                     let cars = load_cars();
-                    dbg!(cars.get(&vehicle_name.unwrap()));
+
+                    dbg!(cars.get(&vehicle_name));
                 }
-                VehicleSubCommand::Update => { println!("Update vehicle"); }
+                VehicleSubCommand::Update => {
+                    println!("Update vehicle");
+                }
+            }
+        }
+    }
+
+    fn retrieve_argument(argument_position: usize, error_message: Option<String>) -> String {
+        match std::env::args().nth(argument_position) {
+            Some(i) => i,
+            None => {
+                println!(
+                    "{}",
+                    error_message.unwrap_or(String::from("No command passed, exiting..."))
+                );
+                exit(1);
+            }
+        }
+    }
+
+    fn convert_argument<T: FromStr<Err = ()>>(argument: &String) -> T {
+        match T::from_str(&argument) {
+            Ok(i) => i,
+            Err(()) => {
+                println!("Invalid subcommand \"{}\", exiting...", argument);
+                exit(1);
             }
         }
     }
@@ -142,17 +146,16 @@ fn load_cars() -> HashMap<String, Car> {
 }
 
 enum SubCommand {
-    Vehicle
+    Vehicle,
 }
 
 impl FromStr for SubCommand {
-
     type Err = ();
 
     fn from_str(input: &str) -> Result<SubCommand, Self::Err> {
         match input {
-            "vehicle"  => Ok(SubCommand::Vehicle),
-            _      => Err(()),
+            "vehicle" => Ok(SubCommand::Vehicle),
+            _ => Err(()),
         }
     }
 }
@@ -166,17 +169,16 @@ enum VehicleSubCommand {
 }
 
 impl FromStr for VehicleSubCommand {
-
     type Err = ();
 
     fn from_str(input: &str) -> Result<VehicleSubCommand, Self::Err> {
         match input {
-            "add"  => Ok(VehicleSubCommand::Add),
-            "remove"  => Ok(VehicleSubCommand::Remove),
-            "list"  => Ok(VehicleSubCommand::List),
-            "get"  => Ok(VehicleSubCommand::Get),
-            "update"  => Ok(VehicleSubCommand::Update),
-            _      => Err(()),
+            "add" => Ok(VehicleSubCommand::Add),
+            "remove" => Ok(VehicleSubCommand::Remove),
+            "list" => Ok(VehicleSubCommand::List),
+            "get" => Ok(VehicleSubCommand::Get),
+            "update" => Ok(VehicleSubCommand::Update),
+            _ => Err(()),
         }
     }
 }
@@ -185,27 +187,28 @@ impl FromStr for VehicleSubCommand {
 struct Car {
     name: String,
     total_mileage: i32,
-    maintenance_items: HashMap<String, MaintenanceItem>
+    maintenance_items: HashMap<String, MaintenanceItem>,
 }
 
 impl Car {
+    #[allow(dead_code)]
     fn add_maintenance_item(
         &mut self,
-        months_interval: u16, 
-        miles_interval: i32, 
-        name: String, 
+        months_interval: u16,
+        miles_interval: i32,
+        name: String,
         description: String,
-        last_performed_maintenance: Option<PerformedMaintenance>
+        last_performed_maintenance: Option<PerformedMaintenance>,
     ) {
         self.maintenance_items.insert(
-            name.to_string(), 
+            name.to_string(),
             build_maintenance_item(
-                months_interval, 
-                miles_interval, 
+                months_interval,
+                miles_interval,
                 name.to_string(),
                 description,
-                last_performed_maintenance
-            )
+                last_performed_maintenance,
+            ),
         );
     }
 }
@@ -219,41 +222,40 @@ struct MaintenanceItem {
     last_performed_maintenance: Option<PerformedMaintenance>,
 }
 
+#[allow(dead_code)]
 fn build_maintenance_item(
-    months_interval: u16, 
-    miles_interval: i32, 
-    name: String, 
+    months_interval: u16,
+    miles_interval: i32,
+    name: String,
     description: String,
-    last_performed_maintenance: Option<PerformedMaintenance>
+    last_performed_maintenance: Option<PerformedMaintenance>,
 ) -> MaintenanceItem {
     MaintenanceItem {
         months_interval,
         miles_interval,
         name,
         description,
-        last_performed_maintenance
+        last_performed_maintenance,
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct PerformedMaintenance {
     miles_performed: i32,
-    date_performed: i32
+    date_performed: i32,
 }
 
+#[allow(dead_code)]
 fn determine_needed_maintenance(car: Car) {
     println!("Car has {} miles\n", car.total_mileage);
     for (k, v) in car.maintenance_items {
         match v.last_performed_maintenance {
-            None => println!("{}",k),
+            None => println!("{}", k),
             Some(performed_maintenance) => {
                 if (performed_maintenance.miles_performed + v.miles_interval) <= car.total_mileage {
-                    let total = (performed_maintenance.miles_performed + v.miles_interval);
                     println!(
-                        "* {} last performed at {}, should be performed every {} miles", 
-                        k,
-                        performed_maintenance.miles_performed,
-                        v.miles_interval
+                        "* {} last performed at {}, should be performed every {} miles",
+                        k, performed_maintenance.miles_performed, v.miles_interval
                     );
                 }
             }
