@@ -1,19 +1,20 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::process::exit;
 use std::str::FromStr;
 
+mod cli;
+
 fn main() {
-    let sub_command = retrieve_argument(1, None);
-    let sub_command: SubCommand = convert_argument(&sub_command);
+    let sub_command = cli::retrieve_argument(1, None);
+    let sub_command: SubCommand = cli::convert_argument(&sub_command);
 
     match sub_command {
         SubCommand::Vehicle => {
-            let vehicle_command = retrieve_argument(
+            let vehicle_command = cli::retrieve_argument(
                 2,
                 Some(String::from("No vehicle sub command found, exiting...")),
             );
-            let vehicle_command: VehicleSubCommand = convert_argument(&vehicle_command);
+            let vehicle_command: VehicleSubCommand = cli::convert_argument(&vehicle_command);
 
             match vehicle_command {
                 VehicleSubCommand::Add => {
@@ -26,7 +27,7 @@ fn main() {
                     println!("List vehicles");
                 }
                 VehicleSubCommand::Get => {
-                    let vehicle_name = retrieve_argument(
+                    let vehicle_name = cli::retrieve_argument(
                         3,
                         Some(String::from("No vehicle name specified, exiting...")),
                     );
@@ -38,29 +39,6 @@ fn main() {
                 VehicleSubCommand::Update => {
                     println!("Update vehicle");
                 }
-            }
-        }
-    }
-
-    fn retrieve_argument(argument_position: usize, error_message: Option<String>) -> String {
-        match std::env::args().nth(argument_position) {
-            Some(i) => i,
-            None => {
-                println!(
-                    "{}",
-                    error_message.unwrap_or(String::from("No command passed, exiting..."))
-                );
-                exit(1);
-            }
-        }
-    }
-
-    fn convert_argument<T: FromStr<Err = ()>>(argument: &String) -> T {
-        match T::from_str(&argument) {
-            Ok(i) => i,
-            Err(()) => {
-                println!("Invalid subcommand \"{}\", exiting...", argument);
-                exit(1);
             }
         }
     }
