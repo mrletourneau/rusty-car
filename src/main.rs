@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 mod cli;
+mod model;
+
+use model::Car;
 
 fn main() {
     let sub_command = cli::retrieve_argument(1, None);
@@ -159,68 +161,6 @@ impl FromStr for VehicleSubCommand {
             _ => Err(()),
         }
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Car {
-    name: String,
-    total_mileage: i32,
-    maintenance_items: HashMap<String, MaintenanceItem>,
-}
-
-impl Car {
-    #[allow(dead_code)]
-    fn add_maintenance_item(
-        &mut self,
-        months_interval: u16,
-        miles_interval: i32,
-        name: String,
-        description: String,
-        last_performed_maintenance: Option<PerformedMaintenance>,
-    ) {
-        self.maintenance_items.insert(
-            name.to_string(),
-            build_maintenance_item(
-                months_interval,
-                miles_interval,
-                name.to_string(),
-                description,
-                last_performed_maintenance,
-            ),
-        );
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct MaintenanceItem {
-    months_interval: u16,
-    miles_interval: i32,
-    name: String,
-    description: String,
-    last_performed_maintenance: Option<PerformedMaintenance>,
-}
-
-#[allow(dead_code)]
-fn build_maintenance_item(
-    months_interval: u16,
-    miles_interval: i32,
-    name: String,
-    description: String,
-    last_performed_maintenance: Option<PerformedMaintenance>,
-) -> MaintenanceItem {
-    MaintenanceItem {
-        months_interval,
-        miles_interval,
-        name,
-        description,
-        last_performed_maintenance,
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct PerformedMaintenance {
-    miles_performed: i32,
-    date_performed: i32,
 }
 
 #[allow(dead_code)]
